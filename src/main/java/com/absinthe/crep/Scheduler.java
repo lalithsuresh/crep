@@ -1,6 +1,7 @@
 package com.absinthe.crep;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -8,15 +9,15 @@ import java.util.Random;
  */
 public class Scheduler {
 
-    private final ArrayList<Executor> executors  = new ArrayList<Executor>();
+    private final ArrayList<ClientThread> clientThreads;
     private final Random rand = new Random();
 
-    Scheduler () {
-
+    Scheduler (ArrayList<ClientThread> clientThreads) {
+        this.clientThreads = clientThreads;
     }
 
     public void schedule(Request req) {
-        Executor exec = executors.get(rand.nextInt(executors.size()));
+        ClientThread exec = clientThreads.get(rand.nextInt(clientThreads.size()));
         exec.enqueue(req);
     }
 }

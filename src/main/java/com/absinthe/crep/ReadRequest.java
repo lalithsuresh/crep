@@ -1,5 +1,6 @@
 package com.absinthe.crep;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -8,12 +9,12 @@ import java.util.Set;
 public class ReadRequest extends Request {
 
     public final String table;
-    public final String key;
+    public final List<String> keys;
     public final Set<String> fields;
 
-    public ReadRequest(String table, String key, Set<String> fields) {
+    public ReadRequest(String table, List<String> keys, Set<String> fields) {
         this.table = table;
-        this.key = key;
+        this.keys = keys;
         this.fields = fields;
     }
 }
