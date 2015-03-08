@@ -4,7 +4,6 @@ import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
 import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.ConnectionPoolConfiguration;
 import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
 import com.netflix.astyanax.connectionpool.OperationResult;
 import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
@@ -14,8 +13,6 @@ import com.netflix.astyanax.connectionpool.impl.CountingConnectionPoolMonitor;
 import com.netflix.astyanax.connectionpool.impl.SmaLatencyScoreStrategyImpl;
 import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
 
-import java.nio.ByteBuffer;
-import java.security.Key;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -27,25 +24,71 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 /**
  * Created by lalithsuresh on 2/18/15.
  */
+
+class StatusThread extends Thread {
+
+    private final List<ClientThread> clientThreads;
+    private final int totalOps;
+    private final int statusCheckInterval; // ms
+
+    StatusThread (List<ClientThread> clientThreads,
+                  int totalOps,
+                  int statusCheckInterval) {
+        assert clientThreads != null;
+        assert totalOps > 0;
+        assert statusCheckInterval >= 1;
+        this.clientThreads = clientThreads;
+        this.totalOps = totalOps;
+        this.statusCheckInterval = statusCheckInterval;
+    }
+
+    @Override
+    public void run() {
+        int completedOps = 0;
+        int lastCompletedOps = 0;
+        double throughput;
+
+        while (totalOps != completedOps) {
+            lastCompletedOps = completedOps;
+            completedOps = 0;
+
+            try {
+                Thread.sleep(statusCheckInterval);
+            } catch (InterruptedException e) {
+                new AssertionError("Status thread interrupted");
+            }
+            for (ClientThread t: clientThreads) {
+                completedOps += t.getTotalCompletedOps();
+            }
+
+            throughput = ((double) (completedOps - lastCompletedOps)
+                    /(double) statusCheckInterval) * 1000;
+            System.out.println("Status thread, Completed Ops: "
+                                + completedOps + ", Throughput: " + throughput);
+        }
+
+        for (ClientThread t: clientThreads) {
+            t.interrupt();
+        }
+
+        ClientThread.shutdownAstyanax();
+    }
+}
+
 public class ClientThread extends Thread {
+
+
+    private static AstyanaxContext context;
+    private static Keyspace keyspace;
+    private static ColumnFamily CF;
 
     private final BlockingQueue<Request> taskQueue = new LinkedBlockingQueue<Request>();
     private volatile boolean terminate = false;
-
-    private AstyanaxContext context;
-    private Keyspace keyspace;
-    private ColumnFamily CF;
     private final Conf conf;
-    private int total = 0;
+    private volatile int totalCompletedOps = 0;
 
-    ClientThread(Conf conf) {
-        this.conf = conf;
-    }
 
-    public void init() throws Exception {
-    }
-
-    public void setupAstyanaxEnv(Conf conf) {
+    public static void setupAstyanaxEnv(Conf conf) {
         CountingConnectionPoolMonitor monitor = new CountingConnectionPoolMonitor();
         ExecutorService executor = Executors.newFixedThreadPool(conf.async_executor_num_threads);
 
@@ -83,13 +126,15 @@ public class ClientThread extends Thread {
                 .buildKeyspace(ThriftFamilyFactory.getInstance());
 
         context.start();
-
-
         keyspace = (Keyspace) context.getClient();
         CF = ColumnFamily.newColumnFamily(columnfamilyName, StringSerializer.get(), StringSerializer.get());
     }
 
-    public void shutdown() {
+    ClientThread(Conf conf) {
+        this.conf = conf;
+    }
+
+    public static void shutdownAstyanax() {
         ExecutorService executor = context.getAstyanaxConfiguration().getAsyncExecutor();
 
         if (!executor.isShutdown()) {
@@ -113,16 +158,15 @@ public class ClientThread extends Thread {
             try {
                 req = taskQueue.take();
             } catch (InterruptedException e) {
-                throw new AssertionError(e);
+                System.out.println("Closing thread " + currentThread().getName() + " on interrupt");
+                return;
             }
-            // XXX: issue calls to Cassandra here.
+
             if (req instanceof ReadRequest) {
-                // XXX: issue reads
                 System.out.println(((ReadRequest) req).keys);
                 read((ReadRequest) req);
             }
             else if (req instanceof InsertRequest) {
-                // XXX: issue insert
                 insert((InsertRequest) req);
             }
         }
@@ -138,6 +182,7 @@ public class ClientThread extends Thread {
                 mutation = mutation.putColumn(columnMutation.getKey(),    // Field name
                                               columnMutation.getValue()); // Field value
             }
+            totalCompletedOps += 1;
         }
         try {
             OperationResult<Void> result = mb.execute();
@@ -151,8 +196,8 @@ public class ClientThread extends Thread {
             OperationResult<Rows<String, String>> result =
                     keyspace.prepareQuery(CF).getKeySlice(request.keys).execute();
             if (result != null) {
-                System.out.println(result.getResult().getRowByIndex(0).getKey());
-                total += 1;
+//                System.out.println("Here: " + result.getResult().getRowByIndex(0).getKey());
+                totalCompletedOps += 1;
             }
 
         } catch (ConnectionException e) {
@@ -168,42 +213,29 @@ public class ClientThread extends Thread {
         }
     }
 
+    public int getTotalCompletedOps() {
+        return totalCompletedOps;
+    }
+
     public static void main(String [] args) {
-        Conf conf = new Conf("conf/crep.yaml");
-        ClientThread ct = new ClientThread(conf);
+        Conf conf = Conf.getConf("conf/crep.yaml");
+        ClientThread.setupAstyanaxEnv(conf);
+        int totalOps = conf.total_operations;
+
         ArrayList<ClientThread> clientThreads = new ArrayList<>();
-        clientThreads.add(ct);
-        Scheduler scheduler = new Scheduler(clientThreads);
-        ct.start();
 
-//        Map<String, Map<String, Integer>> mutations = new HashMap<>();
-//        mutations.put("k1", new HashMap<String, Integer>());
-//        mutations.put("k2", new HashMap<String, Integer>());
-//        mutations.put("k3", new HashMap<String, Integer>());
-//        mutations.get("k1").put("field1", 15);
-//        mutations.get("k1").put("field2", 16);
-//        mutations.get("k1").put("field3", 17);
-//        mutations.get("k2").put("field1", 37);
-//        mutations.get("k3").put("field1", 58);
-//        InsertRequest insertRequest = new InsertRequest("data", mutations);
-//        ct.insert(insertRequest);
-//
-        List<String> keyList = new ArrayList<String>();
-        keyList.add("k1");
-        keyList.add("k2");
-        keyList.add("k3");
-        int tries = 1000;
-        long start = System.currentTimeMillis();
-
-        while (tries != 0) {
-//            ct.read(req);
-            ReadRequest req = new ReadRequest("data", keyList, null);
-            scheduler.schedule(req);
-            tries -= 1;
-            System.out.println(tries);
+        for (int i = 0; i < conf.num_client_threads; i++) {
+            ClientThread ct = new ClientThread(conf);
+            clientThreads.add(ct);
+            ct.start();
         }
-        System.out.println("Done : " + (System.currentTimeMillis() - start));
 
-//        ct.shutdown();
+        StatusThread statusThread = new StatusThread(clientThreads,
+                                                     totalOps,
+                                                     conf.status_thread_update_interval_ms);
+        statusThread.start();
+
+        Scheduler scheduler = new Scheduler(clientThreads);
+        Scenario.execute(conf.workload_file, scheduler, conf);
     }
 }
