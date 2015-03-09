@@ -20,6 +20,8 @@ import com.netflix.astyanax.model.*;
 import com.netflix.astyanax.retry.RunOnce;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
+import org.apache.log4j.Logger;
+
 
 /**
  * Created by lalithsuresh on 2/18/15.
@@ -77,6 +79,7 @@ class StatusThread extends Thread {
 
 public class ClientThread extends Thread {
 
+    static Logger logger = Logger.getLogger(ClientThread.class);
 
     private static AstyanaxContext context;
     private static Keyspace keyspace;
@@ -163,7 +166,6 @@ public class ClientThread extends Thread {
             }
 
             if (req instanceof ReadRequest) {
-                System.out.println(((ReadRequest) req).keys);
                 read((ReadRequest) req);
             }
             else if (req instanceof InsertRequest) {
@@ -196,10 +198,9 @@ public class ClientThread extends Thread {
             OperationResult<Rows<String, String>> result =
                     keyspace.prepareQuery(CF).getKeySlice(request.keys).execute();
             if (result != null) {
-//                System.out.println("Here: " + result.getResult().getRowByIndex(0).getKey());
                 totalCompletedOps += 1;
+                logger.info("Read " + request.keys.size() + " " +  result.getResult().size() + " " + result.getLatency());
             }
-
         } catch (ConnectionException e) {
             e.printStackTrace();
         }

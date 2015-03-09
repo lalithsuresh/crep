@@ -56,17 +56,54 @@ public class Conf {
             Map conf_map = (Map) yaml.load(stream);
             System.out.println(conf_map);
 
-            return new Conf ((String) conf_map.get("cluster_name"),
-                            (String) conf_map.get("keyspace_name"),
-                            (String) conf_map.get("column_family_name"),
-                            (int) conf_map.get("max_conns"),
-                            (String) conf_map.get("hosts"),
-                            (int) conf_map.get("async_executor_num_threads"),
-                            (int) conf_map.get("num_client_threads"),
-                            (int) conf_map.get("total_operations"),
-                            (int) conf_map.get("status_thread_update_interval_ms"),
-                            (boolean) conf_map.get("debug"),
-                            (String) conf_map.get("workload_file"));
+            String cluster_name = (String) conf_map.get("cluster_name");
+            assert cluster_name != null;
+            assert !cluster_name.isEmpty();
+
+            String keyspace_name = (String) conf_map.get("keyspace_name");
+            assert keyspace_name != null;
+            assert !keyspace_name.isEmpty();
+
+            String column_family_name = (String) conf_map.get("column_family_name");
+            assert column_family_name != null;
+            assert !column_family_name .isEmpty();
+
+            int max_conns = (int) conf_map.get("max_conns");
+            assert max_conns > 0;
+
+            String hosts = (String) conf_map.get("hosts");
+            assert hosts != null;
+            assert !hosts.isEmpty();
+
+            int async_executor_num_threads = (int) conf_map.get("async_executor_num_threads");
+            assert async_executor_num_threads > 0;
+
+            int num_client_threads = (int) conf_map.get("num_client_threads");
+            assert num_client_threads > 0;
+
+            int total_operations = (int) conf_map.get("total_operations");
+            assert total_operations > 0;
+
+            int status_thread_update_interval_ms = (int) conf_map.get("status_thread_update_interval_ms");
+            assert status_thread_update_interval_ms > 0;
+
+            boolean debug = (boolean) conf_map.get("debug");
+
+            String workload_file = (String) conf_map.get("workload_file");
+            assert workload_file != null;
+            assert !workload_file.isEmpty();
+
+            return new Conf (cluster_name,
+                             keyspace_name,
+                             column_family_name,
+                             max_conns,
+                             hosts,
+                             async_executor_num_threads,
+                             num_client_threads,
+                             total_operations,
+                             status_thread_update_interval_ms,
+                             debug,
+                             workload_file);
         } catch (FileNotFoundException e) {
             throw new AssertionError("Conf file not found");
         }
