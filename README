@@ -1,0 +1,16 @@
+Crep
+----
+
+A workload replay tool for Cassandra.
+
+
+Building
+--------
+
+$: mvn clean package assembly:single
+
+This will create .zip and .tar.gz files in target/. Extracting these bundles
+will give you a folder with the crep jar as well as the necessary dependencies.
+From inside this folder, simply run:
+
+$: java -jar crep-1.0-SNAPSHOT.jar
