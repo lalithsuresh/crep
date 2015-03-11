@@ -13,6 +13,8 @@ import com.netflix.astyanax.connectionpool.impl.CountingConnectionPoolMonitor;
 import com.netflix.astyanax.connectionpool.impl.SmaLatencyScoreStrategyImpl;
 import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -30,11 +32,12 @@ import org.apache.log4j.Logger;
 class StatusThread extends Thread {
 
     private final List<ClientThread> clientThreads;
-    private final int totalOps;
     private final int statusCheckInterval; // ms
 
+    private volatile int totalOps = -1;
+    private volatile boolean terminate = false;
+
     StatusThread (List<ClientThread> clientThreads,
-                  int totalOps,
                   int statusCheckInterval) {
         assert clientThreads != null;
         assert totalOps > 0;
@@ -50,7 +53,7 @@ class StatusThread extends Thread {
         int lastCompletedOps = 0;
         double throughput;
 
-        while (totalOps != completedOps) {
+        while (!terminate || totalOps != completedOps) {
             lastCompletedOps = completedOps;
             completedOps = 0;
 
@@ -73,6 +76,11 @@ class StatusThread extends Thread {
             t.interrupt();
             t.shutDown();
         }
+    }
+
+    public void receiveTerminateCondition(int totalOps) {
+        this.totalOps = totalOps;
+        this.terminate = true;
     }
 }
 
@@ -134,8 +142,6 @@ public class ClientThread extends Thread {
         Conf conf = Conf.getConf("conf/crep.yaml");
         AstyanaxDriver.init(conf);
 
-        int totalOps = conf.total_operations;
-
         ArrayList<ClientThread> clientThreads = new ArrayList<>();
 
         for (int i = 0; i < conf.num_client_threads; i++) {
@@ -146,11 +152,12 @@ public class ClientThread extends Thread {
         }
 
         StatusThread statusThread = new StatusThread(clientThreads,
-                                                     totalOps,
                                                      conf.status_thread_update_interval_ms);
         statusThread.start();
 
         Scheduler scheduler = new Scheduler(clientThreads);
-        Scenario.execute(conf.workload_file, scheduler, conf);
+        Scenario.setColumnNames(conf.schema_file);
+        int totalOps = Scenario.execute(conf.workload_file, scheduler, conf);
+        statusThread.receiveTerminateCondition(totalOps);
     }
 }

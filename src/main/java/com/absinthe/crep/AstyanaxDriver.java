@@ -78,7 +78,7 @@ public class AstyanaxDriver extends ClientDriver {
         CF = ColumnFamily.newColumnFamily(columnfamilyName, StringSerializer.get(), StringSerializer.get());
     }
 
-    public static void shutDown() {
+    public synchronized void shutDown() {
         ExecutorService executor = context.getAstyanaxConfiguration().getAsyncExecutor();
 
         if (!executor.isShutdown()) {

@@ -1,14 +1,14 @@
 # Astyanax Properties
 cluster_name: "Test Cluster"
-keyspace_name: "usertable"
+keyspace_name: "counts"
 column_family_name: "data"
 max_conns: 10
 hosts: "127.0.0.1:9160,127.0.0.2:9160,127.0.0.3:9160"
 async_executor_num_threads: 10
-total_operations: 100000
 status_thread_update_interval_ms: 2000
 debug: true
 
 # Crep properties
 num_client_threads: 10
-workload_file: "conf/workload"
+workload_file: "conf/test_workload"
+schema_file: "conf/schema"

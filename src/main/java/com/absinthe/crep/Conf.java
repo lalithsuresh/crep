@@ -20,10 +20,10 @@ public class Conf {
     public final String hosts;
     public final int async_executor_num_threads;
     public final int num_client_threads;
-    public final int total_operations;
     public final int status_thread_update_interval_ms;
     public final boolean debug;
     public final String workload_file;
+    public final String schema_file;
 
     private Conf(String cluster_name,
                  String keyspace_name,
@@ -32,10 +32,10 @@ public class Conf {
                  String hosts,
                  int async_executor_num_threads,
                  int num_client_threads,
-                 int total_operations,
                  int status_thread_update_interval_ms,
                  boolean debug,
-                 String workload_file) {
+                 String workload_file,
+                 String schema_file) {
       this.cluster_name = cluster_name;
       this.keyspace_name = keyspace_name;
       this.column_family_name = column_family_name;
@@ -43,10 +43,10 @@ public class Conf {
       this.async_executor_num_threads = async_executor_num_threads;
       this.hosts = hosts;
       this.num_client_threads = num_client_threads;
-      this.total_operations = total_operations;
       this.status_thread_update_interval_ms = status_thread_update_interval_ms;
       this.debug = debug;
       this.workload_file = workload_file;
+      this.schema_file = schema_file;
     }
 
     public static Conf getConf(String confFilePath) {
@@ -81,9 +81,6 @@ public class Conf {
             int num_client_threads = (int) conf_map.get("num_client_threads");
             assert num_client_threads > 0;
 
-            int total_operations = (int) conf_map.get("total_operations");
-            assert total_operations > 0;
-
             int status_thread_update_interval_ms = (int) conf_map.get("status_thread_update_interval_ms");
             assert status_thread_update_interval_ms > 0;
 
@@ -93,6 +90,10 @@ public class Conf {
             assert workload_file != null;
             assert !workload_file.isEmpty();
 
+            String schema_file = (String) conf_map.get("schema_file");
+            assert schema_file != null;
+            assert !schema_file.isEmpty();
+
             return new Conf (cluster_name,
                              keyspace_name,
                              column_family_name,
@@ -100,10 +101,10 @@ public class Conf {
                              hosts,
                              async_executor_num_threads,
                              num_client_threads,
-                             total_operations,
                              status_thread_update_interval_ms,
                              debug,
-                             workload_file);
+                             workload_file,
+                             schema_file);
         } catch (FileNotFoundException e) {
             throw new AssertionError("Conf file not found");
         }

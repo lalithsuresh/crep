@@ -12,9 +12,7 @@ public abstract class ClientDriver {
         throw new NotImplementedException();
     }
 
-    public static void shutDown() {
-        throw new NotImplementedException();
-    }
+    abstract public void shutDown();
 
     abstract public void read(ReadRequest req);
 

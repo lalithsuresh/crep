@@ -92,6 +92,9 @@
                             <!-- Configures the main class of the application -->
                             <mainClass>com.absinthe.crep.ClientThread</mainClass>
                         </manifest>
+                        <manifestEntries>
+                            <Class-Path>./conf/</Class-Path>
+                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
