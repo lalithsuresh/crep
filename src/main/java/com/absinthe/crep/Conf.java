@@ -96,7 +96,7 @@ public class Conf {
 
             boolean debug = (boolean) conf_map.get("debug");
 
-            WorkloadType workload_type = (WorkloadType) conf_map.get("workload_type");
+            WorkloadType workload_type = WorkloadType.valueOf((String) conf_map.get("workload_type"));
 
             String workload_file = (String) conf_map.get("workload_file");
             assert workload_file != null;
@@ -106,7 +106,7 @@ public class Conf {
             assert schema_file != null;
             assert !schema_file.isEmpty();
 
-            long num_records = (long) conf_map.get("num_records");
+            long num_records = Long.valueOf(String.valueOf(conf_map.get("num_records")));
             assert num_records > 0;
 
             return new Conf (cluster_name,

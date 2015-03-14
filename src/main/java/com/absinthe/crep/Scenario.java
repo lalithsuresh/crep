@@ -84,15 +84,15 @@ public class Scenario {
         long numRecords = conf.num_records;
         Random random = new Random();
 
-        for (int keyId = 0; keyId < numRecords; keyId++) {
+        for (long keyId = 0; keyId < numRecords; keyId++) {
             Map<String, Map<String, Integer>> mutations = new HashMap<>();
             Map<String, Integer> columns = new HashMap<>();
 
             // The index starts from 2 onwards, because
             // at i = 0, we have "I", and at i = 1, we
             // have the key name.
-            for (int i = 0; i < columnNames.length; i += 1) {
-                columns.put(columnNames[0], random.nextInt());
+            for (int i = 1; i < columnNames.length; i += 1) {
+                columns.put(columnNames[i], Math.abs(random.nextInt()));
             }
             String keyString = String.valueOf(keyId);
             mutations.put(keyString, columns);
