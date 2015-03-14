@@ -121,10 +121,13 @@ public class AstyanaxDriver extends ClientDriver {
                 mutation = mutation.putColumn(columnMutation.getKey(),    // Field name
                         columnMutation.getValue()); // Field value
             }
-            totalCompletedOps += 1;
         }
         try {
             OperationResult<Void> result = mb.execute();
+            if (result != null) {
+                totalCompletedOps += 1;
+                logger.info("Insert " + request.mutations.size() + " " +  result.getResult() + " " + result.getLatency());
+            }
         } catch (ConnectionException e) {
             e.printStackTrace();
         }

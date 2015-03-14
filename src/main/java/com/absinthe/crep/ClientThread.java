@@ -34,7 +34,7 @@ class StatusThread extends Thread {
     private final List<ClientThread> clientThreads;
     private final int statusCheckInterval; // ms
 
-    private volatile int totalOps = -1;
+    private volatile long totalOps = -1;
     private volatile boolean terminate = false;
 
     StatusThread (List<ClientThread> clientThreads,
@@ -78,7 +78,7 @@ class StatusThread extends Thread {
         }
     }
 
-    public void receiveTerminateCondition(int totalOps) {
+    public void receiveTerminateCondition(long totalOps) {
         this.totalOps = totalOps;
         this.terminate = true;
     }
@@ -157,7 +157,14 @@ public class ClientThread extends Thread {
 
         Scheduler scheduler = new Scheduler(clientThreads);
         Scenario.setColumnNames(conf.schema_file);
-        int totalOps = Scenario.execute(conf.workload_file, scheduler, conf);
+        long totalOps = 0;
+        if (conf.workload_type.equals(Conf.WorkloadType.FILE))
+            totalOps = Scenario.executeFromFile(conf.workload_file, scheduler, conf);
+        else if (conf.workload_type.equals(Conf.WorkloadType.SYNTHETIC))
+            totalOps = Scenario.executeSynthentic(scheduler, conf);
+        else {
+            throw new AssertionError("Not generating scenario");
+        }
         statusThread.receiveTerminateCondition(totalOps);
     }
 }

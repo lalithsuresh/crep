@@ -30,7 +30,7 @@ public class Scenario {
         }
     }
 
-    public static int execute(String filename, Scheduler sched, Conf conf) {
+    public static long executeFromFile(String filename, Scheduler sched, Conf conf) {
         try {
             InputStream stream = new FileInputStream(filename);
 
@@ -78,6 +78,30 @@ public class Scenario {
         } catch (IOException e) {
             throw new AssertionError(e);
         }
+    }
+
+    public static long executeSynthentic(Scheduler sched, Conf conf) {
+        long numRecords = conf.num_records;
+        Random random = new Random();
+
+        for (int keyId = 0; keyId < numRecords; keyId++) {
+            Map<String, Map<String, Integer>> mutations = new HashMap<>();
+            Map<String, Integer> columns = new HashMap<>();
+
+            // The index starts from 2 onwards, because
+            // at i = 0, we have "I", and at i = 1, we
+            // have the key name.
+            for (int i = 0; i < columnNames.length; i += 1) {
+                columns.put(columnNames[0], random.nextInt());
+            }
+            String keyString = String.valueOf(keyId);
+            mutations.put(keyString, columns);
+            InsertRequest req = new InsertRequest(conf.column_family_name,
+                    mutations);
+            sched.schedule(req);
+        }
+
+        return numRecords;
     }
 
     public static Integer validToken(String token) {
