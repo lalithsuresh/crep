@@ -1,28 +1,9 @@
 package com.absinthe.crep;
 
-import com.netflix.astyanax.AstyanaxContext;
-import com.netflix.astyanax.ColumnListMutation;
-import com.netflix.astyanax.Keyspace;
-import com.netflix.astyanax.MutationBatch;
-import com.netflix.astyanax.connectionpool.NodeDiscoveryType;
-import com.netflix.astyanax.connectionpool.OperationResult;
-import com.netflix.astyanax.connectionpool.exceptions.ConnectionException;
-import com.netflix.astyanax.connectionpool.impl.ConnectionPoolConfigurationImpl;
-import com.netflix.astyanax.connectionpool.impl.ConnectionPoolType;
-import com.netflix.astyanax.connectionpool.impl.CountingConnectionPoolMonitor;
-import com.netflix.astyanax.connectionpool.impl.SmaLatencyScoreStrategyImpl;
-import com.netflix.astyanax.impl.AstyanaxConfigurationImpl;
-
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.concurrent.*;
-
-import com.netflix.astyanax.model.*;
-import com.netflix.astyanax.retry.RunOnce;
-import com.netflix.astyanax.serializers.StringSerializer;
-import com.netflix.astyanax.thrift.ThriftFamilyFactory;
-import org.apache.log4j.Logger;
 
 
 /**
@@ -147,7 +128,7 @@ public class ClientThread extends Thread {
         ArrayList<ClientThread> clientThreads = new ArrayList<>();
 
         for (int i = 0; i < conf.num_client_threads; i++) {
-            ClientDriver driver = new AstyanaxDriver();
+            ClientDriver driver = new ThriftDriver();
             driver.init(conf);
             ClientThread ct = new ClientThread(driver);
             ct.setName("ClientThread-" + i);

@@ -2,14 +2,14 @@
 cluster_name: "Test Cluster"
 keyspace_name: "counts"
 column_family_name: "data"
-max_conns: 10
+max_conns: 3
 hosts: "127.0.0.1:9160,127.0.0.2:9160,127.0.0.3:9160"
-async_executor_num_threads: 10
+async_executor_num_threads: 3
 status_thread_update_interval_ms: 1000
 debug: true
 
 # Crep properties
-num_client_threads: 40
+num_client_threads: 20
 workload_type: SYNTHETIC
 workload_file: "conf/test_workload"
 num_records: 1000000
