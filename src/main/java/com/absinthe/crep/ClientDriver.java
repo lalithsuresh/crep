@@ -8,10 +8,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 public abstract class ClientDriver {
     protected volatile int totalCompletedOps = 0;
 
-    public static void init(Conf conf) {
-        throw new NotImplementedException();
-    }
-
+    abstract public void init(Conf conf);
     abstract public void shutDown();
 
     abstract public void read(ReadRequest req);

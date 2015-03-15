@@ -32,11 +32,11 @@ public class AstyanaxDriver extends ClientDriver {
 
     static Logger logger = Logger.getLogger(ClientThread.class);
 
-    private static AstyanaxContext context;
-    private static Keyspace keyspace;
-    private static ColumnFamily CF;
+    private AstyanaxContext context;
+    private Keyspace keyspace;
+    private ColumnFamily CF;
 
-    public static void init(Conf conf) {
+    public void init(Conf conf) {
         CountingConnectionPoolMonitor monitor = new CountingConnectionPoolMonitor();
         ExecutorService executor = Executors.newFixedThreadPool(conf.async_executor_num_threads);
 

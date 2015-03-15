@@ -143,19 +143,21 @@ public class ClientThread extends Thread {
 
     public static void main(String [] args) throws InterruptedException {
         Conf conf = Conf.getConf("conf/crep.yaml");
-        AstyanaxDriver.init(conf);
 
         ArrayList<ClientThread> clientThreads = new ArrayList<>();
 
         for (int i = 0; i < conf.num_client_threads; i++) {
             ClientDriver driver = new AstyanaxDriver();
+            driver.init(conf);
             ClientThread ct = new ClientThread(driver);
+            ct.setName("ClientThread-" + i);
             clientThreads.add(ct);
             ct.start();
         }
 
         StatusThread statusThread = new StatusThread(clientThreads,
                                                      conf.status_thread_update_interval_ms);
+        statusThread.setName("StatusThread");
         statusThread.start();
 
         Scheduler scheduler = new Scheduler(clientThreads);
