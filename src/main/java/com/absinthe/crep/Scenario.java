@@ -5,6 +5,8 @@ import org.apache.avro.generic.GenericData;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by lalith on 07.03.15.
@@ -13,6 +15,11 @@ public class Scenario {
 
     public static Random random = new Random();
     public static String [] columnNames;
+    public static final ReentrantLock lock = new ReentrantLock();
+    public static final Condition notCongested = lock.newCondition();
+    private static boolean canProceed = true;
+    private static int threshold = 20000;
+    private static int lastCount = 0;
 
     public static void setColumnNames(String schemaFile) {
         try {
@@ -30,7 +37,7 @@ public class Scenario {
         }
     }
 
-    public static long executeFromFile(String filename, Scheduler sched, Conf conf) {
+    public static long executeFromFile(String filename, Scheduler sched, Conf conf) throws InterruptedException {
         try {
             InputStream stream = new FileInputStream(filename);
 
@@ -70,6 +77,19 @@ public class Scenario {
                     sched.schedule(req);
                     totalOps ++;
                 }
+
+                try{
+                    lock.lock();
+
+                    while (totalOps >= lastCount + 3 * threshold) {
+//                        System.out.println("Waiting " + totalOps + " " + lastCount + " " + threshold);
+                        notCongested.await();
+//                        System.out.println("Done Waiting " + totalOps + " " + lastCount + " " + threshold);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+
             }
 
             return totalOps;
@@ -80,9 +100,11 @@ public class Scenario {
         }
     }
 
-    public static long executeSynthentic(Scheduler sched, Conf conf) {
+    public static long executeSynthentic(Scheduler sched, Conf conf) throws InterruptedException {
         long numRecords = conf.num_records;
         Random random = new Random();
+
+        int totalOps = 0;
 
         for (long keyId = 0; keyId < numRecords; keyId++) {
             Map<String, Map<String, Integer>> mutations = new HashMap<>();
@@ -99,6 +121,20 @@ public class Scenario {
             InsertRequest req = new InsertRequest(conf.column_family_name,
                     mutations);
             sched.schedule(req);
+
+            totalOps += 1;
+
+            try{
+                lock.lock();
+
+                while (totalOps >= lastCount + 3 * threshold) {
+//                    System.out.println("Waiting " + totalOps + " " + lastCount + " " + threshold);
+                    notCongested.await();
+//                    System.out.println("Done Waiting " + totalOps + " " + lastCount + " " + threshold);
+                }
+            } finally {
+                lock.unlock();
+            }
         }
 
         return numRecords;
@@ -109,5 +145,18 @@ public class Scenario {
             return 0;
         }
         return Integer.parseInt(token);
+    }
+
+    public static void canProceed(boolean canProceed, int completedOps, double threshold) {
+        try {
+            lock.lock();
+            if (completedOps - lastCount > threshold) {
+                notCongested.signal();
+                lastCount = completedOps;
+                threshold = (int) threshold;
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 }

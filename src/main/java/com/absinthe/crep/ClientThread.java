@@ -54,6 +54,7 @@ class StatusThread extends Thread {
         double throughput;
 
         while (!terminate || totalOps != completedOps) {
+            long start = System.currentTimeMillis();
             lastCompletedOps = completedOps;
             completedOps = 0;
 
@@ -67,9 +68,11 @@ class StatusThread extends Thread {
             }
 
             throughput = ((double) (completedOps - lastCompletedOps)
-                    /(double) statusCheckInterval) * 1000;
+                    /(double) (System.currentTimeMillis() - start)) * 1000;
             System.out.println("Status thread, Completed Ops: "
-                                + completedOps + ", Throughput: " + throughput);
+                                + completedOps + ", Throughput: " + throughput + " LastCompleted: " + lastCompletedOps);
+
+            Scenario.canProceed(true, completedOps, throughput);
         }
 
         for (ClientThread t: clientThreads) {
@@ -138,7 +141,7 @@ public class ClientThread extends Thread {
         driver.shutDown();
     }
 
-    public static void main(String [] args) {
+    public static void main(String [] args) throws InterruptedException {
         Conf conf = Conf.getConf("conf/crep.yaml");
         AstyanaxDriver.init(conf);
 
