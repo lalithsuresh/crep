@@ -101,7 +101,7 @@ public class ThriftDriver extends ClientDriver  {
             {
             }
         }
-        System.out.println("WHAT" + tr.isOpen());
+
         try {
             client.set_keyspace(conf.keyspace_name);
         } catch (InvalidRequestException e) {

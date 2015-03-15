@@ -128,7 +128,7 @@ public class ClientThread extends Thread {
         ArrayList<ClientThread> clientThreads = new ArrayList<>();
 
         for (int i = 0; i < conf.num_client_threads; i++) {
-            ClientDriver driver = new ThriftDriver();
+            ClientDriver driver = new AstyanaxDriver();
             driver.init(conf);
             ClientThread ct = new ClientThread(driver);
             ct.setName("ClientThread-" + i);
