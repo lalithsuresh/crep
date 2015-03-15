@@ -53,7 +53,7 @@ class StatusThread extends Thread {
             System.out.println("Status thread, Completed Ops: "
                                 + completedOps + ", Throughput: " + throughput + " LastCompleted: " + lastCompletedOps);
 
-            Scenario.canProceed(true, completedOps, throughput);
+            Scenario.canProceed(true, completedOps, throughput * statusCheckInterval/1000.0);
         }
 
         for (ClientThread t: clientThreads) {

@@ -30,6 +30,7 @@ public class Conf {
     public final String workload_file;
     public final String schema_file;
     public final long num_records;
+    public final int scenario_threshold;
 
     private Conf(String cluster_name,
                  String keyspace_name,
@@ -43,7 +44,8 @@ public class Conf {
                  WorkloadType workload_type,
                  String workload_file,
                  String schema_file,
-                 long num_records) {
+                 long num_records,
+                 int scenario_threshold) {
         this.cluster_name = cluster_name;
         this.keyspace_name = keyspace_name;
         this.column_family_name = column_family_name;
@@ -57,6 +59,7 @@ public class Conf {
         this.workload_file = workload_file;
         this.schema_file = schema_file;
         this.num_records = num_records;
+        this.scenario_threshold = scenario_threshold;
     }
 
     public static Conf getConf(String confFilePath) {
@@ -109,6 +112,9 @@ public class Conf {
             long num_records = Long.valueOf(String.valueOf(conf_map.get("num_records")));
             assert num_records > 0;
 
+            int scenario_threshold = (int) conf_map.get("scenario_threshold");
+            assert scenario_threshold > 0;
+
             return new Conf (cluster_name,
                              keyspace_name,
                              column_family_name,
@@ -121,7 +127,8 @@ public class Conf {
                              workload_type,
                              workload_file,
                              schema_file,
-                             num_records);
+                             num_records,
+                             scenario_threshold);
         } catch (FileNotFoundException e) {
             throw new AssertionError("Conf file not found");
         }

@@ -14,3 +14,4 @@ workload_type: SYNTHETIC
 workload_file: "conf/test_workload"
 num_records: 1000000
 schema_file: "conf/schema"
+scenario_threshold: 3

@@ -78,17 +78,17 @@ public class Scenario {
                     totalOps ++;
                 }
 
-//                try{
-//                    lock.lock();
-//
-//                    while (totalOps >= lastCount + conf.scenario_threshold * threshold) {
-////                        System.out.println("Waiting " + totalOps + " " + lastCount + " " + threshold);
-//                        notCongested.await();
-////                        System.out.println("Done Waiting " + totalOps + " " + lastCount + " " + threshold);
-//                    }
-//                } finally {
-//                    lock.unlock();
-//                }
+                try{
+                    lock.lock();
+
+                    while (totalOps >= lastCount + conf.scenario_threshold * threshold) {
+//                        System.out.println("Waiting " + totalOps + " " + lastCount + " " + threshold);
+                        notCongested.await();
+//                        System.out.println("Done Waiting " + totalOps + " " + lastCount + " " + threshold);
+                    }
+                } finally {
+                    lock.unlock();
+                }
 
             }
 
@@ -124,17 +124,17 @@ public class Scenario {
 
             totalOps += 1;
 
-//            try{
-//                lock.lock();
-//
-//                while (totalOps >= lastCount + conf.scenario_threshold * threshold) {
-////                    System.out.println("Waiting " + totalOps + " " + lastCount + " " + threshold);
-//                    notCongested.await();
-////                    System.out.println("Done Waiting " + totalOps + " " + lastCount + " " + threshold);
-//                }
-//            } finally {
-//                lock.unlock();
-//            }
+            try{
+                lock.lock();
+
+                while (totalOps >= lastCount + conf.scenario_threshold * threshold) {
+//                    System.out.println("Waiting " + totalOps + " " + lastCount + " " + threshold);
+                    notCongested.await();
+//                    System.out.println("Done Waiting " + totalOps + " " + lastCount + " " + threshold);
+                }
+            } finally {
+                lock.unlock();
+            }
         }
 
         return numRecords;
@@ -150,7 +150,7 @@ public class Scenario {
     public static void canProceed(boolean canProceed, int completedOps, double threshold) {
         try {
             lock.lock();
-            if (completedOps - lastCount > threshold) {
+            if (completedOps - lastCount > threshold / 2.0) {
                 notCongested.signal();
                 lastCount = completedOps;
                 threshold = (int) threshold;
