@@ -9,7 +9,7 @@ status_thread_update_interval_ms: 1000
 debug: true
 
 # Crep properties
-num_client_threads: 10
+num_client_threads: 40
 workload_type: SYNTHETIC
 workload_file: "conf/test_workload"
 num_records: 1000000

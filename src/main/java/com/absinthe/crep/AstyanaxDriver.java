@@ -1,5 +1,6 @@
 package com.absinthe.crep;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.netflix.astyanax.AstyanaxContext;
 import com.netflix.astyanax.ColumnListMutation;
 import com.netflix.astyanax.Keyspace;
@@ -21,6 +22,7 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -53,15 +55,16 @@ public class AstyanaxDriver extends ClientDriver {
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                                 .setDiscoveryType(NodeDiscoveryType.NONE)
                                 .setAsyncExecutor(executor)
-                                .setConnectionPoolType(ConnectionPoolType.ROUND_ROBIN)
+                                .setConnectionPoolType(ConnectionPoolType.BAG)
                                 .setDefaultWriteConsistencyLevel(ConsistencyLevel.CL_ONE)
                                 .setDefaultReadConsistencyLevel(ConsistencyLevel.CL_ONE)
                                 .setRetryPolicy(RunOnce.get())
                 )
                 .withConnectionPoolConfiguration(
                         new ConnectionPoolConfigurationImpl(cluster_name)
-                                .setMaxConnsPerHost(maxconns)
                                 .setSeeds(hosts)
+                                .setMaxConnsPerHost(maxconns)
+                                .setMaxConns(maxconns * (hosts.split(",").length))
                                 .setSocketTimeout(10000)
                                 .setLatencyScoreStrategy(new SmaLatencyScoreStrategyImpl(
                                         ConnectionPoolConfigurationImpl.DEFAULT_LATENCY_AWARE_UPDATE_INTERVAL,
@@ -71,7 +74,7 @@ public class AstyanaxDriver extends ClientDriver {
                                 ))
                 )
                 .withConnectionPoolMonitor(monitor)
-                .buildKeyspace(ThriftFamilyFactory.getInstance());
+                .buildKeyspace(new ThriftFamilyFactory());
 
         context.start();
         keyspace = (Keyspace) context.getClient();
@@ -101,9 +104,10 @@ public class AstyanaxDriver extends ClientDriver {
         try {
             OperationResult<Rows<String, String>> result =
                     keyspace.prepareQuery(CF).getKeySlice(request.keys).execute();
+
             if (result != null) {
                 totalCompletedOps += 1;
-                logger.info("Read " + request.keys.size() + " " +  result.getResult().size() + " " + result.getLatency());
+                logger.info("Read " + request.keys.size() + " " + result.getResult().size() + " " + result.getLatency());
             }
         } catch (ConnectionException e) {
             e.printStackTrace();
