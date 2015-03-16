@@ -30,7 +30,8 @@ public class Conf {
     public final String workload_file;
     public final String schema_file;
     public final long num_records;
-    public final int scenario_threshold;
+    public final long record_start;
+    public final int workload_gen_throttle;
 
     private Conf(String cluster_name,
                  String keyspace_name,
@@ -45,7 +46,8 @@ public class Conf {
                  String workload_file,
                  String schema_file,
                  long num_records,
-                 int scenario_threshold) {
+                 long record_start,
+                 int workload_gen_throttle) {
         this.cluster_name = cluster_name;
         this.keyspace_name = keyspace_name;
         this.column_family_name = column_family_name;
@@ -59,7 +61,8 @@ public class Conf {
         this.workload_file = workload_file;
         this.schema_file = schema_file;
         this.num_records = num_records;
-        this.scenario_threshold = scenario_threshold;
+        this.record_start = record_start;
+        this.workload_gen_throttle = workload_gen_throttle;
     }
 
     public static Conf getConf(String confFilePath) {
@@ -109,11 +112,20 @@ public class Conf {
             assert schema_file != null;
             assert !schema_file.isEmpty();
 
-            long num_records = Long.valueOf(String.valueOf(conf_map.get("num_records")));
-            assert num_records > 0;
 
-            int scenario_threshold = (int) conf_map.get("scenario_threshold");
-            assert scenario_threshold > 0;
+            long num_records = -1;
+            long record_start = -1;
+
+            if (workload_type.equals(WorkloadType.SYNTHETIC)) {
+                num_records = Long.valueOf(String.valueOf(conf_map.get("num_records")));
+                assert num_records > 0;
+
+                record_start = Long.valueOf(String.valueOf(conf_map.get("record_start")));
+                assert record_start > 0;
+            }
+
+            int workload_gen_throttle = (int) conf_map.get("workload_gen_throttle");
+            assert workload_gen_throttle > 0;
 
             return new Conf (cluster_name,
                              keyspace_name,
@@ -128,7 +140,8 @@ public class Conf {
                              workload_file,
                              schema_file,
                              num_records,
-                             scenario_threshold);
+                             record_start,
+                             workload_gen_throttle);
         } catch (FileNotFoundException e) {
             throw new AssertionError("Conf file not found");
         }

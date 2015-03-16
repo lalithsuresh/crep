@@ -1,7 +1,5 @@
 package com.absinthe.crep;
 
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -30,8 +28,8 @@ class StatusThread extends Thread {
 
     @Override
     public void run() {
-        int completedOps = 0;
-        int lastCompletedOps = 0;
+        long completedOps = 0;
+        long lastCompletedOps = 0;
         double throughput;
 
         while (!terminate || totalOps != completedOps) {
@@ -147,7 +145,7 @@ public class ClientThread extends Thread {
         if (conf.workload_type.equals(Conf.WorkloadType.FILE))
             totalOps = Scenario.executeFromFile(conf.workload_file, scheduler, conf);
         else if (conf.workload_type.equals(Conf.WorkloadType.SYNTHETIC))
-            totalOps = Scenario.executeSynthentic(scheduler, conf);
+            totalOps = Scenario.syntheticLoad(scheduler, conf);
         else {
             throw new AssertionError("Not generating scenario");
         }

@@ -18,8 +18,8 @@ public class Scenario {
     public static final ReentrantLock lock = new ReentrantLock();
     public static final Condition notCongested = lock.newCondition();
     private static boolean canProceed = true;
-    private static int threshold = 20000;
-    private static int lastCount = 0;
+    private static int throughput = 20000;
+    private static long lastCount = 0;
 
     public static void setColumnNames(String schemaFile) {
         try {
@@ -81,10 +81,8 @@ public class Scenario {
                 try{
                     lock.lock();
 
-                    while (totalOps >= lastCount + conf.scenario_threshold * threshold) {
-//                        System.out.println("Waiting " + totalOps + " " + lastCount + " " + threshold);
+                    while (totalOps >= lastCount + conf.workload_gen_throttle * throughput) {
                         notCongested.await();
-//                        System.out.println("Done Waiting " + totalOps + " " + lastCount + " " + threshold);
                     }
                 } finally {
                     lock.unlock();
@@ -100,13 +98,13 @@ public class Scenario {
         }
     }
 
-    public static long executeSynthentic(Scheduler sched, Conf conf) throws InterruptedException {
+    public static long syntheticLoad(Scheduler sched, Conf conf) throws InterruptedException {
+        long startRecord = conf.record_start;
         long numRecords = conf.num_records;
         Random random = new Random();
+        long totalOps = 0;
 
-        int totalOps = 0;
-
-        for (long keyId = 0; keyId < numRecords; keyId++) {
+        for (long keyId = startRecord; keyId < startRecord + numRecords; keyId++) {
             Map<String, Map<String, Integer>> mutations = new HashMap<>();
             Map<String, Integer> columns = new HashMap<>();
 
@@ -127,10 +125,8 @@ public class Scenario {
             try{
                 lock.lock();
 
-                while (totalOps >= lastCount + conf.scenario_threshold * threshold) {
-//                    System.out.println("Waiting " + totalOps + " " + lastCount + " " + threshold);
+                while (totalOps >= lastCount + conf.workload_gen_throttle * throughput) {
                     notCongested.await();
-//                    System.out.println("Done Waiting " + totalOps + " " + lastCount + " " + threshold);
                 }
             } finally {
                 lock.unlock();
@@ -147,13 +143,15 @@ public class Scenario {
         return Integer.parseInt(token);
     }
 
-    public static void canProceed(boolean canProceed, int completedOps, double threshold) {
+    public static void canProceed(boolean canProceed, long completedOps, double throughput) {
+        // Note, throughput here is expressed across the sampling interval, which
+        // depends on the StatusThread's loop interval.
         try {
             lock.lock();
-            if (completedOps - lastCount > threshold / 2.0) {
+            if (completedOps - lastCount > throughput / 2.0) {
                 notCongested.signal();
                 lastCount = completedOps;
-                threshold = (int) threshold;
+                throughput = (long) throughput;
             }
         } finally {
             lock.unlock();
