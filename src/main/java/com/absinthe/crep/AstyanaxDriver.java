@@ -29,11 +29,11 @@ public class AstyanaxDriver extends ClientDriver {
 
     static Logger logger = LogManager.getLogger(ClientThread.class);
 
-    private AstyanaxContext context;
-    private Keyspace keyspace;
-    private ColumnFamily CF;
+    private static AstyanaxContext context;
+    private static Keyspace keyspace;
+    private static ColumnFamily CF;
 
-    public void init(Conf conf) {
+    public static void init(Conf conf) {
         CountingConnectionPoolMonitor monitor = new CountingConnectionPoolMonitor();
         String cluster_name = conf.cluster_name;
         String keyspaceName = conf.keyspace_name;
@@ -53,6 +53,7 @@ public class AstyanaxDriver extends ClientDriver {
                                 .setRetryPolicy(RunOnce.get())
                 )
                 .withConnectionPoolConfiguration(
+
                         new ConnectionPoolConfigurationImpl(cluster_name)
                                 .setSeeds(hosts)
                                 .setMaxConnsPerHost(maxconns)
@@ -73,7 +74,7 @@ public class AstyanaxDriver extends ClientDriver {
         CF = ColumnFamily.newColumnFamily(columnfamilyName, StringSerializer.get(), StringSerializer.get());
     }
 
-    public synchronized void shutDown() {
+    public static synchronized void shutDown() {
         ExecutorService executor = context.getAstyanaxConfiguration().getAsyncExecutor();
 
         if (!executor.isShutdown()) {

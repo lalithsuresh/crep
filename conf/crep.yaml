@@ -12,7 +12,7 @@ debug: true
 num_client_threads: 20
 workload_type: SYNTHETIC
 workload_file: "conf/test_workload"
-num_records: 10
+num_records: 1000
 record_start: 500
 schema_file: "conf/schema"
 workload_gen_throttle: 3

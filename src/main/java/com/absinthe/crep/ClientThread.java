@@ -1,5 +1,7 @@
 package com.absinthe.crep;
 
+import com.netflix.astyanax.AstyanaxContext;
+
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -56,8 +58,8 @@ class StatusThread extends Thread {
 
         for (ClientThread t: clientThreads) {
             t.interrupt();
-            t.shutDown();
         }
+        AstyanaxDriver.shutDown();
     }
 
     public void receiveTerminateCondition(long totalOps) {
@@ -124,10 +126,9 @@ public class ClientThread extends Thread {
         Conf conf = Conf.getConf("conf/crep.yaml");
 
         ArrayList<ClientThread> clientThreads = new ArrayList<>();
-
+        AstyanaxDriver.init(conf);
         for (int i = 0; i < conf.num_client_threads; i++) {
             ClientDriver driver = new AstyanaxDriver();
-            driver.init(conf);
             ClientThread ct = new ClientThread(driver);
             ct.setName("ClientThread-" + i);
             clientThreads.add(ct);
