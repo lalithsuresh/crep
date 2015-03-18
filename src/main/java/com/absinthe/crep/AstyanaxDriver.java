@@ -47,7 +47,7 @@ public class AstyanaxDriver extends ClientDriver {
                 .forKeyspace(keyspaceName)
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                                 .setDiscoveryType(NodeDiscoveryType.NONE)
-                                .setConnectionPoolType(ConnectionPoolType.ROUND_ROBIN)
+                                .setConnectionPoolType(ConnectionPoolType.BAG)
                                 .setDefaultWriteConsistencyLevel(ConsistencyLevel.CL_ONE)
                                 .setDefaultReadConsistencyLevel(ConsistencyLevel.CL_ONE)
                                 .setRetryPolicy(RunOnce.get())

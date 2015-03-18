@@ -80,6 +80,13 @@ public class ClientThread extends Thread {
 
     @Override
     public void run() {
+        Random r = new Random();
+        // Add some jitter
+        try {
+            Thread.sleep(r.nextInt(1000));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         while (terminate == false) {
             Request req = null;
             try {
