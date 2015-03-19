@@ -15,7 +15,7 @@ import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.retry.RunOnce;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
-import org.apache.logging.log4j.*;
+import org.apache.log4j.*;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
