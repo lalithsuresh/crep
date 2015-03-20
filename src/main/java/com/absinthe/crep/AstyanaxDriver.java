@@ -40,6 +40,7 @@ public class AstyanaxDriver extends ClientDriver {
         String columnfamilyName = conf.column_family_name;
         int maxconns = conf.max_conns;
         String hosts = conf.hosts;
+        String connection_pool_type = conf.connection_pool_type;
         System.out.println(hosts);
 
         context = new AstyanaxContext.Builder()
@@ -47,7 +48,7 @@ public class AstyanaxDriver extends ClientDriver {
                 .forKeyspace(keyspaceName)
                 .withAstyanaxConfiguration(new AstyanaxConfigurationImpl()
                                 .setDiscoveryType(NodeDiscoveryType.NONE)
-                                .setConnectionPoolType(ConnectionPoolType.ROUND_ROBIN)
+                                .setConnectionPoolType(ConnectionPoolType.valueOf(connection_pool_type))
                                 .setDefaultWriteConsistencyLevel(ConsistencyLevel.CL_QUORUM)
                                 .setDefaultReadConsistencyLevel(ConsistencyLevel.CL_ONE)
                                 .setRetryPolicy(RunOnce.get())

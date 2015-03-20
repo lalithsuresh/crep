@@ -23,6 +23,7 @@ public class Conf {
     public final int max_conns;
     public final String hosts;
     public final int async_executor_num_threads;
+    public final String connection_pool_type;
     public final int num_client_threads;
     public final int status_thread_update_interval_ms;
     public final boolean debug;
@@ -39,6 +40,7 @@ public class Conf {
                  int max_conns,
                  String hosts,
                  int async_executor_num_threads,
+                 String connection_pool_type,
                  int num_client_threads,
                  int status_thread_update_interval_ms,
                  boolean debug,
@@ -53,6 +55,7 @@ public class Conf {
         this.column_family_name = column_family_name;
         this.max_conns = max_conns;
         this.async_executor_num_threads = async_executor_num_threads;
+        this.connection_pool_type = connection_pool_type;
         this.hosts = hosts;
         this.num_client_threads = num_client_threads;
         this.status_thread_update_interval_ms = status_thread_update_interval_ms;
@@ -94,6 +97,9 @@ public class Conf {
             int async_executor_num_threads = (int) conf_map.get("async_executor_num_threads");
             assert async_executor_num_threads > 0;
 
+            String connection_pool_type = (String) conf_map.get("connection_pool_type");
+            assert connection_pool_type != null;
+
             int num_client_threads = (int) conf_map.get("num_client_threads");
             assert num_client_threads > 0;
 
@@ -102,19 +108,15 @@ public class Conf {
 
             boolean debug = (boolean) conf_map.get("debug");
 
-            WorkloadType workload_type = WorkloadType.valueOf((String) conf_map.get("workload_type"));
-
-            String workload_file = (String) conf_map.get("workload_file");
-            assert workload_file != null;
-            assert !workload_file.isEmpty();
-
             String schema_file = (String) conf_map.get("schema_file");
             assert schema_file != null;
             assert !schema_file.isEmpty();
 
+            WorkloadType workload_type = WorkloadType.valueOf((String) conf_map.get("workload_type"));
 
             long num_records = -1;
             long record_start = -1;
+            String workload_file = null;
 
             if (workload_type.equals(WorkloadType.SYNTHETIC)) {
                 num_records = Long.valueOf(String.valueOf(conf_map.get("num_records")));
@@ -122,6 +124,12 @@ public class Conf {
 
                 record_start = Long.valueOf(String.valueOf(conf_map.get("record_start")));
                 assert record_start > 0;
+            } else if (workload_type.equals(WorkloadType.FILE)) {
+                workload_file = (String) conf_map.get("workload_file");
+                assert workload_file != null;
+                assert !workload_file.isEmpty();
+            } else {
+                throw new AssertionError("Cannot handle WorkloadType" + workload_type);
             }
 
             int workload_gen_throttle = (int) conf_map.get("workload_gen_throttle");
@@ -133,6 +141,7 @@ public class Conf {
                              max_conns,
                              hosts,
                              async_executor_num_threads,
+                             connection_pool_type,
                              num_client_threads,
                              status_thread_update_interval_ms,
                              debug,
