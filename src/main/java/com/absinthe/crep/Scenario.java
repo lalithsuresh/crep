@@ -22,6 +22,9 @@ public class Scenario {
     private static long lastCount = 0;
 
     public static void setColumnNames(String schemaFile) {
+        if (schemaFile == null) {
+            return;
+        }
         try {
             InputStream stream = new FileInputStream(schemaFile);
 
@@ -59,6 +62,7 @@ public class Scenario {
                     sched.schedule(req);
                     totalOps ++;
                 } else if (splits[0].equals("I")) {
+                    assert columnNames.length > 0;
                     Map<String, Map<String, Integer>> mutations = new HashMap<>();
                     Map<String, Integer> columns = new HashMap<>();
 

@@ -109,8 +109,8 @@ public class Conf {
             boolean debug = (boolean) conf_map.get("debug");
 
             String schema_file = (String) conf_map.get("schema_file");
-            assert schema_file != null;
-            assert !schema_file.isEmpty();
+            // assert schema_file != null;
+            // assert !schema_file.isEmpty();
 
             WorkloadType workload_type = WorkloadType.valueOf((String) conf_map.get("workload_type"));
 
