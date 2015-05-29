@@ -15,6 +15,7 @@ import com.netflix.astyanax.model.Rows;
 import com.netflix.astyanax.retry.RunOnce;
 import com.netflix.astyanax.serializers.StringSerializer;
 import com.netflix.astyanax.thrift.ThriftFamilyFactory;
+import com.netflix.astyanax.util.RangeBuilder;
 import org.apache.log4j.*;
 
 import java.util.Map;
@@ -97,12 +98,14 @@ public class AstyanaxDriver extends ClientDriver {
     public void read(ReadRequest request) {
         try {
             OperationResult<Rows<String, String>> result =
-                    keyspace.prepareQuery(CF).getKeySlice(request.keys).execute();
+                    keyspace.prepareQuery(CF)
+                            .getKeySlice(request.keys)
+                            .withColumnRange(new RangeBuilder().setLimit(5).build())
+                            .execute();
 
             if (result != null) {
                 totalCompletedOps += 1;
                 totalCompletedReads += result.getResult().size();
-                System.out.println(result.getResult());
                 logger.info("Read " + request.keys.size() + " " + result.getResult().size() + " " + result.getLatency());
             }
         } catch (ConnectionException e) {
