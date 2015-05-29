@@ -5,7 +5,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,8 +12,8 @@ import java.util.Map;
  */
 public class Conf {
     enum WorkloadType {
-        FILE,
-        SYNTHETIC
+        WORKLOAD_FILE,
+        SYNTHETIC_LOAD
     }
 
     public final String cluster_name;
@@ -33,6 +32,7 @@ public class Conf {
     public final long num_records;
     public final long record_start;
     public final int workload_gen_throttle;
+    public final boolean disable_client_multireads;
 
     private Conf(String cluster_name,
                  String keyspace_name,
@@ -49,7 +49,8 @@ public class Conf {
                  String schema_file,
                  long num_records,
                  long record_start,
-                 int workload_gen_throttle) {
+                 int workload_gen_throttle,
+                 boolean disable_client_multireads) {
         this.cluster_name = cluster_name;
         this.keyspace_name = keyspace_name;
         this.column_family_name = column_family_name;
@@ -66,6 +67,7 @@ public class Conf {
         this.num_records = num_records;
         this.record_start = record_start;
         this.workload_gen_throttle = workload_gen_throttle;
+        this.disable_client_multireads = disable_client_multireads;
     }
 
     public static Conf getConf(String confFilePath) {
@@ -118,13 +120,13 @@ public class Conf {
             long record_start = -1;
             String workload_file = null;
 
-            if (workload_type.equals(WorkloadType.SYNTHETIC)) {
+            if (workload_type.equals(WorkloadType.SYNTHETIC_LOAD)) {
                 num_records = Long.valueOf(String.valueOf(conf_map.get("num_records")));
                 assert num_records > 0;
 
                 record_start = Long.valueOf(String.valueOf(conf_map.get("record_start")));
                 assert record_start > 0;
-            } else if (workload_type.equals(WorkloadType.FILE)) {
+            } else if (workload_type.equals(WorkloadType.WORKLOAD_FILE)) {
                 workload_file = (String) conf_map.get("workload_file");
                 assert workload_file != null;
                 assert !workload_file.isEmpty();
@@ -134,6 +136,8 @@ public class Conf {
 
             int workload_gen_throttle = (int) conf_map.get("workload_gen_throttle");
             assert workload_gen_throttle > 0;
+
+            boolean disable_client_multireads = (boolean) conf_map.get("disable_client_multireads");
 
             return new Conf (cluster_name,
                              keyspace_name,
@@ -150,7 +154,8 @@ public class Conf {
                              schema_file,
                              num_records,
                              record_start,
-                             workload_gen_throttle);
+                             workload_gen_throttle,
+                             disable_client_multireads);
         } catch (FileNotFoundException e) {
             throw new AssertionError("Conf file not found");
         }

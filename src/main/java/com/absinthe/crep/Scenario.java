@@ -1,9 +1,6 @@
 package com.absinthe.crep;
 
-import org.apache.avro.generic.GenericData;
-
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -53,14 +50,36 @@ public class Scenario {
                 line = line.trim();
                 String [] splits = line.split(" ");
                 if (splits[0].equals("R")) {
-                    List<String> keys = new ArrayList<>();
-                    for (int i = 1; i < splits.length; i++) {
-                        keys.add(splits[i]);
+                    // Each line looks as follows
+                    // : "R k1 k2 k3 k4..."
+                    //
+                    // Each line is a single multi-key request. Whether or not
+                    // a multi-key request is sent out as a single multi-read
+                    // or multiple reads is realized by the disable_client_multireads
+                    // flag in the configuration file.
+
+                    if (conf.disable_client_multireads == false) {
+                        // We collapse a batch request into a single read.
+                        // The fanout is pushed to the Cassandra coordinator.
+                        List<String> keys = new ArrayList<>();
+                        for (int i = 1; i < splits.length; i++) {
+                            keys.add(splits[i]);
+                        }
+                        ReadRequest req = new ReadRequest(conf.column_family_name,
+                                keys, null);
+                        sched.schedule(req);
+                        totalOps++;
+                    } else {
+                        // The request fanout happens at the client.
+                        for (int i = 1; i < splits.length; i++) {
+                            List<String> keys = new ArrayList<>();
+                            keys.add(splits[i]);
+                            ReadRequest req = new ReadRequest(conf.column_family_name,
+                                    keys, null);
+                            sched.schedule(req);
+                            totalOps++;
+                        }
                     }
-                    ReadRequest req = new ReadRequest(conf.column_family_name,
-                                                      keys, null);
-                    sched.schedule(req);
-                    totalOps ++;
                 } else if (splits[0].equals("I")) {
                     assert columnNames.length > 0;
                     Map<String, Map<String, Integer>> mutations = new HashMap<>();

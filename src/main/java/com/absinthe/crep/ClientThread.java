@@ -1,7 +1,5 @@
 package com.absinthe.crep;
 
-import com.netflix.astyanax.AstyanaxContext;
-
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -150,9 +148,9 @@ public class ClientThread extends Thread {
         Scheduler scheduler = new Scheduler(clientThreads);
         Scenario.setColumnNames(conf.schema_file);
         long totalOps = 0;
-        if (conf.workload_type.equals(Conf.WorkloadType.FILE))
+        if (conf.workload_type.equals(Conf.WorkloadType.WORKLOAD_FILE))
             totalOps = Scenario.executeFromFile(conf.workload_file, scheduler, conf);
-        else if (conf.workload_type.equals(Conf.WorkloadType.SYNTHETIC))
+        else if (conf.workload_type.equals(Conf.WorkloadType.SYNTHETIC_LOAD))
             totalOps = Scenario.syntheticLoad(scheduler, conf);
         else {
             throw new AssertionError("Not generating scenario");

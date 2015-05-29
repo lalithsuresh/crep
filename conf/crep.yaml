@@ -11,9 +11,10 @@ debug: true
 
 # Crep properties
 num_client_threads: 20
-workload_type: SYNTHETIC
+workload_type: WORKLOAD_FILE
 workload_file: "conf/test_workload"
-num_records: 1000
-record_start: 500
-schema_file: "conf/schema"
+# num_records: 1000
+# record_start: 500
+# schema_file: "conf/schema"
 workload_gen_throttle: 3
+disable_client_multireads: false
