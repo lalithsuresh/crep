@@ -7,6 +7,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  */
 public abstract class ClientDriver {
     protected volatile int totalCompletedOps = 0;
+    protected volatile int totalCompletedReads = 0;
+    protected volatile int totalCompletedWrites = 0;
 
     public static void init(Conf conf) {
         throw new NotImplementedException();
@@ -21,5 +23,13 @@ public abstract class ClientDriver {
 
     public int getTotalCompletedOps() {
         return totalCompletedOps;
+    }
+
+    public int getTotalCompletedReads() {
+        return totalCompletedReads;
+    }
+
+    public int getTotalCompletedWrites() {
+        return totalCompletedWrites;
     }
 }

@@ -30,12 +30,19 @@ class StatusThread extends Thread {
     public void run() {
         long completedOps = 0;
         long lastCompletedOps = 0;
-        double throughput;
+        double opsThroughput;
+
+        long completedReads = 0;
+        long lastCompletedReads = 0;
+        double readThroughput = 0;
 
         while (!terminate || totalOps != completedOps) {
             long start = System.currentTimeMillis();
             lastCompletedOps = completedOps;
             completedOps = 0;
+
+            lastCompletedReads = completedReads;
+            completedReads = 0;
 
             try {
                 Thread.sleep(statusCheckInterval);
@@ -44,14 +51,19 @@ class StatusThread extends Thread {
             }
             for (ClientThread t: clientThreads) {
                 completedOps += t.getTotalCompletedOps();
+                completedReads += t.getTotalCompletedReads();
             }
 
-            throughput = ((double) (completedOps - lastCompletedOps)
+            opsThroughput = ((double) (completedOps - lastCompletedOps)
                     /(double) (System.currentTimeMillis() - start)) * 1000;
-            System.out.println("Status thread, Completed Ops: "
-                                + completedOps + ", Throughput: " + throughput + " LastCompleted: " + lastCompletedOps);
+            readThroughput = ((double) (completedReads - lastCompletedReads)
+                    /(double) (System.currentTimeMillis() - start)) * 1000;
 
-            Scenario.canProceed(true, completedOps, throughput * statusCheckInterval/1000.0);
+            System.out.println("Status thread, Completed Ops: " + completedOps +
+                               ", Ops-Throughput: " + opsThroughput +
+                               ", Read-throughput: " + readThroughput);
+
+            Scenario.canProceed(true, completedOps, opsThroughput * statusCheckInterval/1000.0);
         }
 
         for (ClientThread t: clientThreads) {
@@ -123,6 +135,10 @@ public class ClientThread extends Thread {
 
     public int getTotalCompletedOps() {
         return driver.getTotalCompletedOps();
+    }
+
+    public int getTotalCompletedReads() {
+        return driver.getTotalCompletedReads();
     }
 
     public void shutDown() {

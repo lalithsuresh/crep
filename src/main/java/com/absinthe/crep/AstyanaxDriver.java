@@ -101,6 +101,7 @@ public class AstyanaxDriver extends ClientDriver {
 
             if (result != null) {
                 totalCompletedOps += 1;
+                totalCompletedReads += result.getResult().size();
                 logger.info("Read " + request.keys.size() + " " + result.getResult().size() + " " + result.getLatency());
             }
         } catch (ConnectionException e) {
@@ -124,6 +125,7 @@ public class AstyanaxDriver extends ClientDriver {
             OperationResult<Void> result = mb.execute();
             if (result != null) {
                 totalCompletedOps += 1;
+                totalCompletedWrites += request.mutations.size();
                 logger.info("Insert " + request.mutations.size() + " " +  result.getResult() + " " + result.getLatency());
             }
         } catch (ConnectionException e) {
