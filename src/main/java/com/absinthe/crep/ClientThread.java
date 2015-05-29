@@ -63,6 +63,7 @@ class StatusThread extends Thread {
     public void receiveTerminateCondition(long totalOps) {
         this.totalOps = totalOps;
         this.terminate = true;
+        System.out.println("Received terminate condition for " + this.totalOps + " operations");
     }
 }
 
