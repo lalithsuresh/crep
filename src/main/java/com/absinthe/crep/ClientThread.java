@@ -79,10 +79,11 @@ public class ClientThread extends Thread {
 
     @Override
     public void run() {
-        Random r = new Random();
-        // Add some jitter
         try {
-            Thread.sleep(r.nextInt(1000));
+            Random r = new Random();
+            // Allow the Scenario part of the system to populate
+            // request queues for five seconds plus some jitter
+            Thread.sleep(5000 + r.nextInt(1000));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
