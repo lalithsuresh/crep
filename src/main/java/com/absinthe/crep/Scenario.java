@@ -15,7 +15,7 @@ public class Scenario {
     public static final ReentrantLock lock = new ReentrantLock();
     public static final Condition notCongested = lock.newCondition();
     private static boolean canProceed = true;
-    private static int throughput = 20000;
+    private static long throughput = 20000;
     private static long lastCount = 0;
 
     public static void setColumnNames(String schemaFile) {
@@ -166,7 +166,7 @@ public class Scenario {
         return Integer.parseInt(token);
     }
 
-    public static void canProceed(boolean canProceed, long completedOps, double throughput) {
+    public static void canProceed(boolean canProceed, long completedOps, double throughput_) {
         // Note, throughput here is expressed across the sampling interval, which
         // depends on the StatusThread's loop interval.
         try {
@@ -174,7 +174,7 @@ public class Scenario {
             if (completedOps - lastCount > throughput / 2.0) {
                 notCongested.signal();
                 lastCount = completedOps;
-                throughput = (long) throughput;
+                throughput = (long) throughput_;
             }
         } finally {
             lock.unlock();

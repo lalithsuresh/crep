@@ -36,6 +36,12 @@ class StatusThread extends Thread {
         long lastCompletedReads = 0;
         double readThroughput = 0;
 
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            new AssertionError("Status thread interrupted");
+        }
+
         while (!terminate || totalOps != completedOps) {
             long start = System.currentTimeMillis();
             lastCompletedOps = completedOps;
