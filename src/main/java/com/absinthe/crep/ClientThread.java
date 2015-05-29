@@ -158,6 +158,8 @@ public class ClientThread extends Thread {
             ct.start();
         }
 
+        System.out.println("Client Threads ready: will begin executing workload in 5 seconds");
+
         StatusThread statusThread = new StatusThread(clientThreads,
                                                      conf.status_thread_update_interval_ms);
         statusThread.setName("StatusThread");
