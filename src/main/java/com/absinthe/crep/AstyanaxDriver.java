@@ -102,6 +102,7 @@ public class AstyanaxDriver extends ClientDriver {
             if (result != null) {
                 totalCompletedOps += 1;
                 totalCompletedReads += result.getResult().size();
+                System.out.println(result.getResult());
                 logger.info("Read " + request.keys.size() + " " + result.getResult().size() + " " + result.getLatency());
             }
         } catch (ConnectionException e) {
