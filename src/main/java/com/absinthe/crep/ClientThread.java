@@ -13,6 +13,7 @@ class StatusThread extends Thread {
     private final List<ClientThread> clientThreads;
     private final int statusCheckInterval; // ms
 
+    private long terminateTime = 0;
     private volatile long totalOps = -1;
     private volatile boolean terminate = false;
 
@@ -70,6 +71,13 @@ class StatusThread extends Thread {
                                ", Read-throughput: " + readThroughput);
 
             Scenario.canProceed(true, completedOps, opsThroughput * statusCheckInterval/1000.0);
+
+            // When some reads return null, they do not contribute to the total
+            // completed ops. For this reason, we terminate some fixed time
+            // after receiving a termination event
+            if (terminate && this.terminateTime + 10000 < System.currentTimeMillis()) {
+                break;
+            }
         }
 
         for (ClientThread t: clientThreads) {
@@ -81,6 +89,7 @@ class StatusThread extends Thread {
     public void receiveTerminateCondition(long totalOps) {
         this.totalOps = totalOps;
         this.terminate = true;
+        this.terminateTime = System.currentTimeMillis();
         System.out.println("Received terminate condition for " + this.totalOps + " operations");
     }
 }
