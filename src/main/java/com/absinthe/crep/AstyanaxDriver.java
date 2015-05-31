@@ -108,7 +108,7 @@ public class AstyanaxDriver extends ClientDriver {
                 totalCompletedOps += 1;
                 totalCompletedReads += result.getResult().size();
 
-                if (statsSampleChance >= rand.nextFloat()) {
+                if (statsSampleChance >= rand.nextDouble()) {
                     logger.info("Read " + request.keys.size() + " " + result.getResult().size() + " " + result.getLatency());
                 }
             }
