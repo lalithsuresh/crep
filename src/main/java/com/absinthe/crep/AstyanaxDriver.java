@@ -18,6 +18,7 @@ import com.netflix.astyanax.thrift.ThriftFamilyFactory;
 import org.apache.log4j.*;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +33,9 @@ public class AstyanaxDriver extends ClientDriver {
     private static AstyanaxContext context;
     private static Keyspace keyspace;
     private static ColumnFamily CF;
+    private static float statsSampleChance = 1.0f;
+
+    private Random rand = new Random();
 
     public static void init(Conf conf) {
         CountingConnectionPoolMonitor monitor = new CountingConnectionPoolMonitor();
@@ -73,6 +77,7 @@ public class AstyanaxDriver extends ClientDriver {
         context.start();
         keyspace = (Keyspace) context.getClient();
         CF = ColumnFamily.newColumnFamily(columnfamilyName, StringSerializer.get(), StringSerializer.get());
+        statsSampleChance = conf.stats_sample_chance;
     }
 
     public static synchronized void shutDown() {
@@ -102,7 +107,10 @@ public class AstyanaxDriver extends ClientDriver {
             if (result != null) {
                 totalCompletedOps += 1;
                 totalCompletedReads += result.getResult().size();
-                logger.info("Read " + request.keys.size() + " " + result.getResult().size() + " " + result.getLatency());
+
+                if (statsSampleChance >= rand.nextFloat()) {
+                    logger.info("Read " + request.keys.size() + " " + result.getResult().size() + " " + result.getLatency());
+                }
             }
         } catch (ConnectionException e) {
             e.printStackTrace();
@@ -126,7 +134,10 @@ public class AstyanaxDriver extends ClientDriver {
             if (result != null) {
                 totalCompletedOps += 1;
                 totalCompletedWrites += request.mutations.size();
-                logger.info("Insert " + request.mutations.size() + " " +  result.getResult() + " " + result.getLatency());
+
+                if (statsSampleChance >= rand.nextFloat()) {
+                    logger.info("Insert " + request.mutations.size() + " " + result.getResult() + " " + result.getLatency());
+                }
             }
         } catch (ConnectionException e) {
             e.printStackTrace();

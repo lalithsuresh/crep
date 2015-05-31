@@ -33,6 +33,7 @@ public class Conf {
     public final long record_start;
     public final int workload_gen_throttle;
     public final boolean disable_client_multireads;
+    public final float stats_sample_chance;
 
     private Conf(String cluster_name,
                  String keyspace_name,
@@ -50,7 +51,8 @@ public class Conf {
                  long num_records,
                  long record_start,
                  int workload_gen_throttle,
-                 boolean disable_client_multireads) {
+                 boolean disable_client_multireads,
+                 float stats_sample_chance) {
         this.cluster_name = cluster_name;
         this.keyspace_name = keyspace_name;
         this.column_family_name = column_family_name;
@@ -68,6 +70,7 @@ public class Conf {
         this.record_start = record_start;
         this.workload_gen_throttle = workload_gen_throttle;
         this.disable_client_multireads = disable_client_multireads;
+        this.stats_sample_chance = stats_sample_chance;
     }
 
     public static Conf getConf(String confFilePath) {
@@ -139,6 +142,10 @@ public class Conf {
 
             boolean disable_client_multireads = (boolean) conf_map.get("disable_client_multireads");
 
+            float stats_sample_chance = (float) conf_map.get("stats_sample_chance");
+            assert stats_sample_chance > 0;
+            assert stats_sample_chance <= 1.0;
+
             return new Conf (cluster_name,
                              keyspace_name,
                              column_family_name,
@@ -155,7 +162,8 @@ public class Conf {
                              num_records,
                              record_start,
                              workload_gen_throttle,
-                             disable_client_multireads);
+                             disable_client_multireads,
+                             stats_sample_chance);
         } catch (FileNotFoundException e) {
             throw new AssertionError("Conf file not found");
         }
