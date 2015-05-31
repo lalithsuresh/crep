@@ -33,7 +33,7 @@ public class AstyanaxDriver extends ClientDriver {
     private static AstyanaxContext context;
     private static Keyspace keyspace;
     private static ColumnFamily CF;
-    private static float statsSampleChance = 1.0f;
+    private static double statsSampleChance = 1.0;
 
     private Random rand = new Random();
 

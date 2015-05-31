@@ -33,7 +33,7 @@ public class Conf {
     public final long record_start;
     public final int workload_gen_throttle;
     public final boolean disable_client_multireads;
-    public final float stats_sample_chance;
+    public final double stats_sample_chance;
 
     private Conf(String cluster_name,
                  String keyspace_name,
@@ -52,7 +52,7 @@ public class Conf {
                  long record_start,
                  int workload_gen_throttle,
                  boolean disable_client_multireads,
-                 float stats_sample_chance) {
+                 double stats_sample_chance) {
         this.cluster_name = cluster_name;
         this.keyspace_name = keyspace_name;
         this.column_family_name = column_family_name;
@@ -142,7 +142,7 @@ public class Conf {
 
             boolean disable_client_multireads = (boolean) conf_map.get("disable_client_multireads");
 
-            float stats_sample_chance = (float) conf_map.get("stats_sample_chance");
+            double stats_sample_chance = (double) conf_map.get("stats_sample_chance");
             assert stats_sample_chance > 0;
             assert stats_sample_chance <= 1.0;
 
